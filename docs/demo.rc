@@ -1,0 +1,49 @@
+# vim: ft=rtorrent fdm=syntax
+#
+# Testing testing TODO FIXME NOTE
+
+dht.mode.set = disable
+network.receive_buffer.size.set = 4M
+method.insert = pyro.log_rotate, multi|rlookup|static, foo
+network.listen.port.range.set = 64333-64666
+network.listen.port.random.set = no
+pyro.bind_key = no_quit, ^q, "noq"
+
+schedule = pyro_daily_log_rotate, 01:05:00, 24:00:00, ((pyro.log_rotate))
+
+schedule = pyro_daily_log_rotate, 01:05:00, 24:00:00, \
+  "branch = (pyro.extended), \"foobar\""
+
+schedule = prune, 01:20:00, 24:00:00, \
+  ((execute.nothrow, sh, -c, \
+    ((pmb._logfile_find_cmd, (log.gz), ((pyro.log_retention.days)), rm))))
+
+method.insert.simple = import, \
+  ((if, ((os.path.readable, ((argument.0)))), ((try_import, ((argument.0))))))
+
+method.insert = foo, simple|private, \
+    "branch = (pyro.extended), ((log.messages, (argument.0)))"
+
+method.insert = bar, simple|private, \
+     "cat = \"find \", (cfg.logs),\
+            \" -daystart -type f -name '*.\", (argument.0), \"'\",\
+            \" -mtime +\", (argument.1),\
+            \" -exec nice \", (argument.2), \" '{}' ';'\""
+
+branch = (foobar), false=, ((view.sort_current, "active", "greater=d.up.rate="))
+
+schedule = filt, 12, 20, ((do, \
+    ((view.filter, "active", "or={d.up.rate=,d.down.rate=,not=$d.complete=}")), \
+    ((view.sort, "active")) \
+    ))
+
+method.insert = os.path.readable, simple, "string.equals = 0, \
+  (execute.capture_system, \"set +e; test -r \\\"$1\\\"; echo $?\", (argument.0))"
+
+schedule = low_diskspace, 15, 60, ((close_low_diskspace.normal, (( ((1000M)) )) ))
+
+method.set_key = ui.column.render, "135:1:✰ ",\
+    ((string.map, ((cat, ((d.priority)))), {0, "✖ "}, {1, "⇣ "}, {2, "  "}, {3, "⇡ "}))
+
+method.insert = ui.column.render, "135:1:✰ ",\
+    ((string.map, ((cat, ((d.priority)))), {0, "✖ "}, {1, "⇣ "}, {2, "  "}, {3, "⇡ "}))

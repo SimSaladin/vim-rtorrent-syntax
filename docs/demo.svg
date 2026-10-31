@@ -1,0 +1,79 @@
+<svg width="750" height="1500" xmlns="http://www.w3.org/2000/svg">
+<foreignObject width="750" height="1500">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+<html>
+<head>
+<style>
+pre { font-family: monospace; color: #839496; background-color: #002b36; }
+body { font-family: monospace; color: #839496; background-color: #002b36; }
+* { font-size: 1em; }
+a { color: inherit; }
+.LineNr { color: #586e75; background-color: #073642; padding-bottom: 1px; }
+.Comment { color: #586e75; font-style: italic; }
+.Constant { color: #2aa198; }
+.Special { color: #dc322f; }
+.Statement { color: #719e07; }
+.PreProc { color: #cb4b16; }
+.Type { color: #b58900; }
+.Underlined { color: #6c71c4; }
+.Todo { color: #d33682; font-weight: bold; }
+</style>
+
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment"># vim&#0058; ft=rtorrent fdm=syntax</span>
+<span class="Comment">#</span>
+<span class="Comment"># Testing testing </span><span class="Todo">TODO</span><span class="Comment"> </span><span class="Todo">FIXME</span><span class="Comment"> </span><span class="Todo">NOTE</span>
+
+<span class="Statement">dht</span><span class="Statement">.</span><span class="Statement">mode</span><span class="Statement">.</span><span class="Statement">set</span> <span class="Statement">=</span> <span class="Constant">disable</span>
+<span class="Statement">network</span><span class="Statement">.</span><span class="Statement">receive_buffer</span><span class="Statement">.</span><span class="Statement">size</span><span class="Statement">.</span><span class="Statement">set</span> <span class="Statement">=</span> <span class="Constant">4M</span>
+<span class="Statement">method</span><span class="Statement">.</span><span class="Statement">insert</span> <span class="Statement">=</span> <span class="Constant">pyro.log_rotate</span><span class="Special">,</span> <span class="Type">multi</span><span class="Statement">|</span><span class="Type">rlookup</span><span class="Statement">|</span><span class="Type">static</span><span class="Special">,</span> foo
+<span class="Statement">network</span><span class="Statement">.</span><span class="Statement">listen</span><span class="Statement">.</span><span class="Statement">port</span><span class="Statement">.</span><span class="Statement">range</span><span class="Statement">.</span><span class="Statement">set</span> <span class="Statement">=</span> <span class="Constant">64333</span><span class="Statement">-</span><span class="Constant">64666</span>
+<span class="Statement">network</span><span class="Statement">.</span><span class="Statement">listen</span><span class="Statement">.</span><span class="Statement">port</span><span class="Statement">.</span><span class="Statement">random</span><span class="Statement">.</span><span class="Statement">set</span> <span class="Statement">=</span> <span class="Constant">no</span>
+<span class="Statement">pyro</span><span class="Statement">.</span><span class="Statement">bind_key</span> <span class="Statement">=</span> no_quit<span class="Special">,</span> <span class="Special">^q</span><span class="Special">,</span> <span class="Constant">&quot;noq&quot;</span>
+
+<span class="Statement">schedule</span> <span class="Statement">=</span> <span class="Constant">pyro_daily_log_rotate</span><span class="Special">,</span> <span class="Constant">01</span><span class="Statement">:</span><span class="Constant">05</span><span class="Statement">:</span><span class="Constant">00</span><span class="Special">,</span> <span class="Constant">24</span><span class="Statement">:</span><span class="Constant">00</span><span class="Statement">:</span><span class="Constant">00</span><span class="Special">,</span> <span class="Special">((</span><span class="Type">pyro</span><span class="Statement">.</span>log_rotate<span class="Special">))</span>
+
+<span class="Statement">schedule</span> <span class="Statement">=</span> <span class="Constant">pyro_daily_log_rotate</span><span class="Special">,</span> <span class="Constant">01</span><span class="Statement">:</span><span class="Constant">05</span><span class="Statement">:</span><span class="Constant">00</span><span class="Special">,</span> <span class="Constant">24</span><span class="Statement">:</span><span class="Constant">00</span><span class="Statement">:</span><span class="Constant">00</span><span class="Special">,</span> <span class="Special">\</span>
+  <span class="Constant">&quot;</span><span class="Statement">branch</span> = <span class="Special">(</span><span class="Type">pyro</span><span class="Statement">.</span>extended<span class="Special">)</span><span class="Special">,</span> <span class="Underlined">\&quot;</span><span class="Constant">foobar</span><span class="Underlined">\&quot;</span><span class="Constant">&quot;</span>
+
+<span class="Statement">schedule</span> <span class="Statement">=</span> <span class="Constant">prune</span><span class="Special">,</span> <span class="Constant">01</span><span class="Statement">:</span><span class="Constant">20</span><span class="Statement">:</span><span class="Constant">00</span><span class="Special">,</span> <span class="Constant">24</span><span class="Statement">:</span><span class="Constant">00</span><span class="Statement">:</span><span class="Constant">00</span><span class="Special">,</span> <span class="Special">\</span>
+  <span class="Special">((</span><span class="Statement">execute.nothrow</span><span class="Special">,</span> sh<span class="Special">,</span> -c<span class="Special">,</span> <span class="Special">\</span>
+    ((<span class="Type">pmb</span><span class="Statement">.</span>_logfile_find_cmd<span class="Special">,</span> <span class="Special">(</span><span class="Type">log</span><span class="Statement">.</span>gz<span class="Special">)</span><span class="Special">,</span> ((<span class="Type">pyro.log_retention</span><span class="Statement">.</span>days))<span class="Special">,</span> rm))<span class="Special">))</span>
+
+<span class="Statement">method</span><span class="Statement">.</span><span class="Statement">insert</span><span class="Statement">.</span><span class="Statement">simple</span> <span class="Statement">=</span> <span class="Constant">import</span><span class="Special">,</span> <span class="Special">\</span>
+  <span class="Special">((</span><span class="Statement">if</span><span class="Special">,</span> ((<span class="Type">os.path</span><span class="Statement">.</span>readable<span class="Special">,</span> ((<span class="PreProc">argument</span><span class="Statement">.</span><span class="PreProc">0</span>))))<span class="Special">,</span> ((<span class="Statement">try_import</span><span class="Special">,</span> ((<span class="PreProc">argument</span><span class="Statement">.</span><span class="PreProc">0</span>))))<span class="Special">))</span>
+
+<span class="Statement">method</span><span class="Statement">.</span><span class="Statement">insert</span> <span class="Statement">=</span> <span class="Constant">foo</span><span class="Special">,</span> <span class="Type">simple</span><span class="Statement">|</span><span class="Type">private</span><span class="Special">,</span> <span class="Special">\</span>
+    <span class="Constant">&quot;</span><span class="Statement">branch</span> = <span class="Special">(</span><span class="Type">pyro</span><span class="Statement">.</span>extended<span class="Special">)</span><span class="Special">,</span> <span class="Special">((</span><span class="Type">log</span><span class="Statement">.</span>messages<span class="Special">,</span> <span class="Special">(</span><span class="PreProc">argument</span><span class="Statement">.</span><span class="PreProc">0</span><span class="Special">)</span><span class="Special">))</span><span class="Constant">&quot;</span>
+
+<span class="Statement">method</span><span class="Statement">.</span><span class="Statement">insert</span> <span class="Statement">=</span> <span class="Constant">bar</span><span class="Special">,</span> <span class="Type">simple</span><span class="Statement">|</span><span class="Type">private</span><span class="Special">,</span> <span class="Special">\</span>
+     <span class="Constant">&quot;</span><span class="Statement">cat</span> = <span class="Underlined">\&quot;</span><span class="Constant">find </span><span class="Underlined">\&quot;</span><span class="Special">,</span> <span class="Special">(</span><span class="Type">cfg</span><span class="Statement">.</span>logs<span class="Special">)</span><span class="Special">,\</span>
+            <span class="Underlined">\&quot;</span><span class="Constant"> -daystart -type f -name '*.</span><span class="Underlined">\&quot;</span><span class="Special">,</span> <span class="Special">(</span><span class="PreProc">argument</span><span class="Statement">.</span><span class="PreProc">0</span><span class="Special">)</span><span class="Special">,</span> <span class="Underlined">\&quot;</span><span class="Constant">'</span><span class="Underlined">\&quot;</span><span class="Special">,\</span>
+            <span class="Underlined">\&quot;</span><span class="Constant"> -mtime +</span><span class="Underlined">\&quot;</span><span class="Special">,</span> <span class="Special">(</span><span class="PreProc">argument</span><span class="Statement">.</span><span class="PreProc">1</span><span class="Special">)</span><span class="Special">,\</span>
+            <span class="Underlined">\&quot;</span><span class="Constant"> -exec nice </span><span class="Underlined">\&quot;</span><span class="Special">,</span> <span class="Special">(</span><span class="PreProc">argument</span><span class="Statement">.</span><span class="PreProc">2</span><span class="Special">)</span><span class="Special">,</span> <span class="Underlined">\&quot;</span><span class="Constant"> '{}' ';'</span><span class="Underlined">\&quot;</span><span class="Constant">&quot;</span>
+
+<span class="Statement">branch</span> <span class="Statement">=</span> <span class="Special">(</span>foobar<span class="Special">)</span><span class="Special">,</span> <span class="Statement">false</span>=<span class="Special">,</span> <span class="Special">((</span><span class="Type">view</span><span class="Statement">.</span>sort_current<span class="Special">,</span> <span class="Constant">&quot;active&quot;</span><span class="Special">,</span> <span class="Constant">&quot;greater=d.up.rate=&quot;</span><span class="Special">))</span>
+
+<span class="Statement">schedule</span> <span class="Statement">=</span> <span class="Constant">filt</span><span class="Special">,</span> <span class="Constant">12</span><span class="Special">,</span> <span class="Constant">20</span><span class="Special">,</span> <span class="Special">((</span><span class="Statement">do</span><span class="Special">,</span> <span class="Special">\</span>
+    ((<span class="Type">view</span><span class="Statement">.</span>filter<span class="Special">,</span> <span class="Constant">&quot;active&quot;</span><span class="Special">,</span> <span class="Constant">&quot;or={d.up.rate=,d.down.rate=,not=$d.complete=}&quot;</span>))<span class="Special">,</span> <span class="Special">\</span>
+    ((<span class="Type">view</span><span class="Statement">.</span>sort<span class="Special">,</span> <span class="Constant">&quot;active&quot;</span>)) <span class="Special">\</span>
+    <span class="Special">))</span>
+
+<span class="Statement">method</span><span class="Statement">.</span><span class="Statement">insert</span> <span class="Statement">=</span> <span class="Constant">os.path.readable</span><span class="Special">,</span> <span class="Type">simple</span><span class="Special">,</span> <span class="Constant">&quot;</span><span class="Type">string</span><span class="Statement">.</span>equals = <span class="Constant">0</span><span class="Special">,</span> <span class="Special">\</span>
+  <span class="Special">(</span><span class="Statement">execute.capture_system</span><span class="Special">,</span> <span class="Underlined">\&quot;</span><span class="Constant">set +e; test -r \\</span><span class="Underlined">\&quot;</span>$<span class="Constant">1</span>\\<span class="Underlined">\&quot;</span><span class="Constant">; echo $?</span><span class="Underlined">\&quot;</span><span class="Special">,</span> <span class="Special">(</span><span class="PreProc">argument</span><span class="Statement">.</span><span class="PreProc">0</span><span class="Special">))</span><span class="Constant">&quot;</span>
+
+<span class="Statement">schedule</span> <span class="Statement">=</span> <span class="Constant">low_diskspace</span><span class="Special">,</span> <span class="Constant">15</span><span class="Special">,</span> <span class="Constant">60</span><span class="Special">,</span> <span class="Special">((</span><span class="Type">close_low_diskspace</span><span class="Statement">.</span>normal<span class="Special">,</span> (( ((<span class="Constant">1000M</span>)) )) <span class="Special">))</span>
+
+<span class="Statement">method</span><span class="Statement">.</span><span class="Statement">set_key</span> <span class="Statement">=</span> <span class="Constant">ui.column.render</span><span class="Special">,</span> <span class="Constant">&quot;135:1:✰ &quot;</span><span class="Special">,\</span>
+    <span class="Special">((</span><span class="Type">string</span><span class="Statement">.</span>map<span class="Special">,</span> ((<span class="Statement">cat</span><span class="Special">,</span> ((<span class="PreProc">d.</span>priority))))<span class="Special">,</span> <span class="Special">{</span><span class="Constant">0</span><span class="Special">,</span> <span class="Constant">&quot;✖ &quot;</span><span class="Special">}</span><span class="Special">,</span> <span class="Special">{</span><span class="Constant">1</span><span class="Special">,</span> <span class="Constant">&quot;⇣ &quot;</span><span class="Special">}</span><span class="Special">,</span> <span class="Special">{</span><span class="Constant">2</span><span class="Special">,</span> <span class="Constant">&quot;  &quot;</span><span class="Special">}</span><span class="Special">,</span> <span class="Special">{</span><span class="Constant">3</span><span class="Special">,</span> <span class="Constant">&quot;⇡ &quot;</span><span class="Special">}</span><span class="Special">))</span>
+
+<span class="Statement">method</span><span class="Statement">.</span><span class="Statement">insert</span> <span class="Statement">=</span> <span class="Constant">ui.column.render</span><span class="Special">,</span> <span class="Constant">&quot;135:1:✰ &quot;</span><span class="Special">,\</span>
+    <span class="Special">((</span><span class="Type">string</span><span class="Statement">.</span>map<span class="Special">,</span> ((<span class="Statement">cat</span><span class="Special">,</span> ((<span class="PreProc">d.</span>priority))))<span class="Special">,</span> <span class="Special">{</span><span class="Constant">0</span><span class="Special">,</span> <span class="Constant">&quot;✖ &quot;</span><span class="Special">}</span><span class="Special">,</span> <span class="Special">{</span><span class="Constant">1</span><span class="Special">,</span> <span class="Constant">&quot;⇣ &quot;</span><span class="Special">}</span><span class="Special">,</span> <span class="Special">{</span><span class="Constant">2</span><span class="Special">,</span> <span class="Constant">&quot;  &quot;</span><span class="Special">}</span><span class="Special">,</span> <span class="Special">{</span><span class="Constant">3</span><span class="Special">,</span> <span class="Constant">&quot;⇡ &quot;</span><span class="Special">}</span><span class="Special">))</span>
+</pre>
+</body>
+</html>
+    </div>
+</foreignObject>
+</svg>
