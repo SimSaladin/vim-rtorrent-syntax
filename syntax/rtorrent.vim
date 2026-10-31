@@ -14,6 +14,41 @@ scriptencoding utf-8
 let s:cpo_save = &cpo
 set cpo&vim
 
+function! s:mkNestedParens(nameBase, matchGroupBase, match, containsBase, limit)"{{{
+  let depth = 1
+  while depth <= a:limit
+    execute 'syn region ' . a:nameBase . (depth==1?'':depth)
+          \ . ' contained matchgroup=' . a:matchGroupBase . depth . ' ' . a:match
+          \ . ' contains=' . a:containsBase . ',' . a:nameBase . (depth+1 > a:limit ? '' : depth+1)
+          \ . ' skipwhite transparent'
+    let depth += 1
+  endwhile
+endfunction"}}}
+
+function! s:DefineMethodSyn(key, parts) abort"{{{
+  function! s:mgroup(k, x)
+    return 'rtorrentMethod' . a:k . (a:x > 0 ? a:x : '')
+  endfunction
+  function! s:mkMatch(k, i, pat, contains, nextgroup)
+    execute 'syn match '.s:mgroup(a:k, a:i).' contained '.a:pat.' contains='.a:contains.' skipwhite nextgroup='
+          \ . (empty(a:nextgroup) ? s:mgroup(a:k, a:i + 1) : a:nextgroup) .' transparent'
+  endfunction
+  let i = 0
+  for x in a:parts
+    call s:mkMatch(a:key, i, x[0], x[1], x[2])
+    let i = i + 1
+  endfor
+  execute 'syn cluster rtorrentMethodStatement add=' . s:mgroup(a:key, 0)
+endfunction"}}}
+
+function! s:methodBy(pat, next = 0)"{{{
+  return [ '/\%(' . a:pat . '\)\s*=/', 'rtorrentMethodName,rtorrentEq', a:next ]
+endfunction"}}}
+
+function! s:param(ty, next)"{{{
+  return [ '/\S.\{-}\ze,/', empty(a:ty) ? '@rtorrentRhsTop' : a:ty, a:next ]
+endfunction"}}}
+
 " Include "." in keywords
 syn iskeyword @,48-57,_,.,192-255
 
@@ -62,7 +97,7 @@ syn match   rtorrentCtrlChar      contained "\^[a-zA-Z0-9]\>" skipwhite
 
 syn region  rtorrentStringLit     contained                                 start=+"+   skip=+\\"+       end=+"+     contains=rtorrentStringEscape,@Spell
 syn region  rtorrentSStringLit    contained matchgroup=rtorrentSStringDelim start=+\\"+                  end=+\\"+   contains=@Spell
-syn region  rtorrentStringCommand contained matchgroup=String               start=+"+   skip=+\\\\\|\\"+ end=+"+     contains=@rtorrentSRhsTop,rtorrentSStringLit,rtorrentSParens2
+syn region  rtorrentStringCommand contained matchgroup=String               start=+"+   skip=+\\\\\|\\"+ end=+"+     contains=@rtorrentSRhsTop,rtorrentSStringLit,rtorrentSPD
 syn cluster rtorrentLiteral       contains=rtorrentBool,rtorrentNumber,rtorrentSizeLit,rtorrentTimeInterval,rtorrentType,rtorrentCtrlChar,rtorrentStringLit
 syn cluster rtorrentSLiteral      contains=rtorrentBool,rtorrentNumber,rtorrentSizeLit,rtorrentTimeInterval,rtorrentType,rtorrentCtrlChar,rtorrentSStringLit
 syn match   rtorrentStringEscape  contained '\\.'
@@ -74,13 +109,13 @@ syn match   rtorrentMethodName    contained +\k\++ contains=rtorrentDot,rtorrent
 syn match   rtorrentMethodNameEnd contained +\.\%(set_key\|set\|bind_key\)\>+ms=s+1,lc=1
 syn match   rtorrentStatement               "^\s*[a-zA-Z]\k*\(\\\\\|\\\n\|.\)*$" contains=@rtorrentMethodStatement,@NoSpell    keepend fold transparent
 syn match   rtorrentLhs           contained +^\k\+\>\s*=+                        contains=rtorrentMethodName,rtorrentEq        skipwhite nextgroup=rtorrentRhs
-syn region  rtorrentRhs           contained start=+\_.+ skip=+\\\n+ end=+$+      contains=@rtorrentRhsTop,rtorrentParens2      skipwhite
+syn region  rtorrentRhs           contained start=+\_.+ skip=+\\\n+ end=+$+      contains=@rtorrentRhsTop,rtorrentPD      skipwhite
 
 " Values on the RHS (top-level)
-syn cluster rtorrentRhsTop  contains=rtorrentDelimiter,rtorrentIdentifier,rtorrentBraces,@rtorrentLiteral,rtorrentParens1
+syn cluster rtorrentRhsTop  contains=rtorrentDelimiter,rtorrentIdentifier,@rtorrentLiteral,rtorrentB,rtorrentP
 
 " Values on the RHS (inside command string)
-syn cluster rtorrentSRhsTop contains=rtorrentDelimiter,rtorrentIdentifier,rtorrentBraces,@rtorrentSLiteral,rtorrentSParens1
+syn cluster rtorrentSRhsTop contains=rtorrentDelimiter,rtorrentIdentifier,@rtorrentSLiteral,rtorrentSB,rtorrentSP
 
 " Command specific overrides                                             "{{{2
 
@@ -88,56 +123,34 @@ syn cluster rtorrentMethodStatement contains=rtorrentLhs
 
 " rtorrentMethodSchedule,rtorrentMethodInsert,rtorrentMethodInsertAs
 
-function! s:DefineMethodSyn(key, parts) abort
-  function! s:mgroup(k, x)
-    return 'rtorrentMethod' . a:k . (a:x > 0 ? a:x : '')
-  endfunction
-  function! s:mkMatch(k, i, pat, contains, nextgroup)
-    execute 'syn match '.s:mgroup(a:k, a:i).' contained '.a:pat.' contains='.a:contains.' skipwhite nextgroup='
-          \ . (empty(a:nextgroup) ? s:mgroup(a:k, a:i + 1) : a:nextgroup) .' transparent'
-  endfunction
-  let i = 0
-  for x in a:parts
-    call s:mkMatch(a:key, i, x[0], x[1], x[2])
-    let i = i + 1
-  endfor
-  execute 'syn cluster rtorrentMethodStatement add=' . s:mgroup(a:key, 0)
-endfunction
-function! s:methodBy(pat)
-  return [ '/' . a:pat . '\s*=/', 'rtorrentMethodName,rtorrentEq', 0 ]
-endfunction
-function! s:param(ty, next)
-  return [ '/\S.\{-}\ze,/', empty(a:ty) ? '@rtorrentRhsTop' : a:ty, a:next ]
-endfunction
-
-
 " "schedule = <name>, <time>, <time>, <command>"
 " "method.(insert|set_key|insert.*) = ..."
-call s:DefineMethodSyn('Schedule', [s:methodBy('schedule'),                     s:param('rtorrentStringy',0), s:param(0,0), s:param(0,'rtorrentCommandArgument')])
-call s:DefineMethodSyn('Insert',   [s:methodBy('method\.\%(insert\|set_key\)'), s:param('rtorrentStringy',0), s:param(0,'rtorrentCommandArgument')])
-call s:DefineMethodSyn('InsertAs', [s:methodBy('method\.\%(insert\.\k\+\|set\)'), s:param('rtorrentStringy','rtorrentCommandArgument')])
+" "if = <cond>, <then>, <elif_else>"
+" "branch = <cond>, <then>, <elif_else>"
+call s:DefineMethodSyn('Schedule',    [s:methodBy('schedule'), s:param('rtorrentStringy',0), s:param(0,0), s:param(0,'rtorrentCommandArgument')])
+call s:DefineMethodSyn('WStrSomeCmd', [s:methodBy('method\.\%(insert\|set_key\)'), s:param('rtorrentStringy',0), s:param(0,'rtorrentCommandArgument')])
+call s:DefineMethodSyn('WStrCmd',     [s:methodBy('method\.\%(insert\.\k\+\|set\)'), s:param('rtorrentStringy','rtorrentCommandArgument')])
+call s:DefineMethodSyn('W3Cmd',       [s:methodBy('if\|branch'), s:param('rtorrentCommandArgument',0), s:param('rtorrentCommandArgument','rtorrentCommandArgument')])
+call s:DefineMethodSyn('W1Cmd',       [s:methodBy('catch\|try\|print\|not', 'rtorrentCommandArgument')])
+call s:DefineMethodSyn('ViewFilter',  [s:methodBy('view\.filter'), s:param('rtorrentStringy','rtorrentCommandArgument')])
 
 " New or old style command "(( ... )) or foo=bar"
 syn region  rtorrentCommandArgument    contained start=+\_.+ end=+$+      contains=@rtorrentCommandArgumentTOP transparent
-syn cluster rtorrentCommandArgumentTOP contains=rtorrentDelimiter,rtorrentStringCommand,rtorrentParens2
+syn cluster rtorrentCommandArgumentTOP contains=rtorrentDelimiter,rtorrentStringCommand,rtorrentPD,rtorrentP,rtorrentB
 
 " Commands                                                               "{{{1
 
 " Cmd list "{ ... }"
-syn region rtorrentBraces              contained matchgroup=rtorrentBracesA1 start=+{+  skip=+{.\{-}}+   end=+}+ contains=@rtorrentRhsTop,rtorrentParens2     skipwhite transparent
-syn region rtorrentSBraces             contained matchgroup=rtorrentBracesA1 start=+{+  skip=+{.\{-}}+   end=+}+ contains=@rtorrentSRhsTop,rtorrentSParens2   skipwhite transparent
+call s:mkNestedParens('rtorrentB',  'rtorrentBC', 'start=+{+ skip=+{.\{-}}+ end=+}+', '@rtorrentRhsTop,rtorrentPD', 2)
+call s:mkNestedParens('rtorrentSB', 'rtorrentBC', 'start=+{+ skip=+{.\{-}}+ end=+}+', '@rtorrentSRhsTop,rtorrentSPD', 2)
 
 " Cmd parens "( <cmd>[, <arg>...] )"
-syn region rtorrentParens1             contained matchgroup=rtorrentParensA1 start=+(+  skip=+(.\{-})+   end=+)+ contains=@rtorrentRhsTop,rtorrentParens2     skipwhite transparent keepend
-syn region rtorrentSParens1            contained matchgroup=rtorrentParensA1 start=+(+  skip=+(.\{-})+   end=+)+ contains=@rtorrentSRhsTop,rtorrentSParens2   skipwhite transparent keepend
+call s:mkNestedParens('rtorrentP',  'rtorrentPC', 'start=+(+ skip=+(.\{-})+ end=+)+', '@rtorrentRhsTop,rtorrentPD', 2)
+call s:mkNestedParens('rtorrentSP', 'rtorrentPC', 'start=+(+ skip=+(.\{-})+ end=+)+', '@rtorrentSRhsTop,rtorrentSPD', 2)
 
 " Cmd parens 2 "(( <command>[, <args>...] ))"
-syn region rtorrentParens2             contained matchgroup=rtorrentParensB1 start=+((+ skip=+((.\{-}))+ end=+))+ contains=@rtorrentRhsTop,rtorrentParens2B   skipwhite transparent
-syn region rtorrentParens2B            contained matchgroup=rtorrentParensB2 start=+((+ skip=+((.\{-}))+ end=+))+ contains=@rtorrentRhsTop,rtorrentParens2C   skipwhite transparent
-syn region rtorrentParens2C            contained matchgroup=rtorrentParensB3 start=+((+ skip=+((.\{-}))+ end=+))+ contains=@rtorrentRhsTop,rtorrentParens2    skipwhite transparent
-syn region rtorrentSParens2            contained matchgroup=rtorrentParensB1 start=+((+ skip=+((.\{-}))+ end=+))+ contains=@rtorrentSRhsTop,rtorrentSParens2B skipwhite transparent
-syn region rtorrentSParens2B           contained matchgroup=rtorrentParensB2 start=+((+ skip=+((.\{-}))+ end=+))+ contains=@rtorrentSRhsTop,rtorrentSParens2C skipwhite transparent
-syn region rtorrentSParens2C           contained matchgroup=rtorrentParensB3 start=+((+ skip=+((.\{-}))+ end=+))+ contains=@rtorrentSRhsTop,rtorrentSParens2  skipwhite transparent
+call s:mkNestedParens('rtorrentPD',  'rtorrentPDC', 'start=+((+ skip=+((.\{-}))+ end=+))+', '@rtorrentRhsTop', 4)
+call s:mkNestedParens('rtorrentSPD', 'rtorrentPDC', 'start=+((+ skip=+((.\{-}))+ end=+))+', '@rtorrentSRhsTop', 4)
 
 " Delimiters & operators                                                 "{{{1
 
@@ -157,13 +170,16 @@ hi def link rtorrentTodo             Todo
 hi def link rtorrentComment          Comment
 hi def link rtorrentLineComment      Comment
 " Braces: single
-hi def link rtorrentBracesA1         Delimiter
+hi          rtorrentBC1              ctermfg=135
+hi          rtorrentBC2              ctermfg=133
 " Parentheses: single
-hi def link rtorrentParensA1         Delimiter
-" Parentheses: dual (3 levels)
-hi def link rtorrentParensB1         Delimiter
-hi          rtorrentParensB2         ctermfg=5
-hi          rtorrentParensB3         ctermfg=13
+hi          rtorrentPC1              ctermfg=105
+hi          rtorrentPC2              ctermfg=103
+" Parentheses: dual (4 levels)
+hi          rtorrentPDC1             ctermfg=160
+hi          rtorrentPDC2             ctermfg=167
+hi          rtorrentPDC3             ctermfg=165
+hi          rtorrentPDC4             ctermfg=162
 " Literals and Constants
 hi def link rtorrentBool             Boolean
 hi def link rtorrentNumber           Number

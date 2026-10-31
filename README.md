@@ -1,5 +1,7 @@
 # vim-rtorrent-syntax: Enhanced rTorrent (`rtorrent.rc`) syntax highlighting
 
+This plugin implements syntax highlighting for modern `rtorrent.rc`.
+
 ## Demo
 
 ![Example `rtorrent.rc`](./docs/demo.svg#1232)
