@@ -2,7 +2,7 @@
 
 ## Demo
 
-![](./docs/demo.svg)
+![Example `rtorrent.rc`](./docs/demo.svg#1232)
 
 -------------------
 
