@@ -20,33 +20,11 @@ function! s:mkNestedParens(nameBase, matchGroupBase, match, containsBase, limit)
     execute 'syn region ' . a:nameBase . (depth==1?'':depth)
           \ . ' contained matchgroup=' . a:matchGroupBase . depth . ' ' . a:match
           \ . ' contains=' . a:containsBase . ',' . a:nameBase . (depth+1 > a:limit ? '' : depth+1)
-          \ . ' skipwhite transparent'
+          \ . ' skipwhite'
+          \ . ' fold'
+    "     \ . ' transparent'
     let depth += 1
   endwhile
-endfunction"}}}
-
-function! s:DefineMethodSyn(key, parts) abort"{{{
-  function! s:mgroup(k, x)
-    return 'rtorrentMethod' . a:k . (a:x > 0 ? a:x : '')
-  endfunction
-  function! s:mkMatch(k, i, pat, contains, nextgroup)
-    execute 'syn match '.s:mgroup(a:k, a:i).' contained '.a:pat.' contains='.a:contains.' skipwhite nextgroup='
-          \ . (empty(a:nextgroup) ? s:mgroup(a:k, a:i + 1) : a:nextgroup) .' transparent'
-  endfunction
-  let i = 0
-  for x in a:parts
-    call s:mkMatch(a:key, i, x[0], x[1], x[2])
-    let i = i + 1
-  endfor
-  execute 'syn cluster rtorrentMethodStatement add=' . s:mgroup(a:key, 0)
-endfunction"}}}
-
-function! s:methodBy(pat, next = 0)"{{{
-  return [ '/\%(' . a:pat . '\)\s*=/', 'rtorrentMethodName,rtorrentEq', a:next ]
-endfunction"}}}
-
-function! s:param(ty, next)"{{{
-  return [ '/\S.\{-}\ze,/', empty(a:ty) ? '@rtorrentRhsTop' : a:ty, a:next ]
 endfunction"}}}
 
 " Include "." in keywords
@@ -97,11 +75,12 @@ syn match   rtorrentCtrlChar      contained "\^[a-zA-Z0-9]\>" skipwhite
 
 syn region  rtorrentStringLit     contained                                 start=+"+   skip=+\\"+       end=+"+     contains=rtorrentStringEscape,@Spell
 syn region  rtorrentSStringLit    contained matchgroup=rtorrentSStringDelim start=+\\"+                  end=+\\"+   contains=@Spell
-syn region  rtorrentStringCommand contained matchgroup=String               start=+"+   skip=+\\\\\|\\"+ end=+"+     contains=@rtorrentSRhsTop,rtorrentSStringLit,rtorrentSPD
+syn region  rtorrentStringCommand contained matchgroup=String               start=+"+   skip=+\\\\\|\\"+ end=+"+     contains=@rtorrentSRhsTop,rtorrentSStringLit,rtorrentSPD keepend
 syn cluster rtorrentLiteral       contains=rtorrentBool,rtorrentNumber,rtorrentSizeLit,rtorrentTimeInterval,rtorrentType,rtorrentCtrlChar,rtorrentStringLit
 syn cluster rtorrentSLiteral      contains=rtorrentBool,rtorrentNumber,rtorrentSizeLit,rtorrentTimeInterval,rtorrentType,rtorrentCtrlChar,rtorrentSStringLit
 syn match   rtorrentStringEscape  contained '\\.'
-syn match   rtorrentStringy       contained "\k.\{-}"
+syn match   rtorrentStringy       contained "\S.\{-}"
+syn region  rtorrentStringy       contained                                 start=+"+   skip=+\\"+       end=+"+     contains=rtorrentStringEscape,@Spell
 
 " Statements & methods                                                    {{{1
 
@@ -121,22 +100,46 @@ syn cluster rtorrentSRhsTop contains=rtorrentDelimiter,rtorrentIdentifier,@rtorr
 
 syn cluster rtorrentMethodStatement contains=rtorrentLhs
 
-" rtorrentMethodSchedule,rtorrentMethodInsert,rtorrentMethodInsertAs
-
 " "schedule = <name>, <time>, <time>, <command>"
 " "method.(insert|set_key|insert.*) = ..."
 " "if = <cond>, <then>, <elif_else>"
 " "branch = <cond>, <then>, <elif_else>"
-call s:DefineMethodSyn('Schedule',    [s:methodBy('schedule'), s:param('rtorrentStringy',0), s:param(0,0), s:param(0,'rtorrentCommandArgument')])
-call s:DefineMethodSyn('WStrSomeCmd', [s:methodBy('method\.\%(insert\|set_key\)'), s:param('rtorrentStringy',0), s:param(0,'rtorrentCommandArgument')])
-call s:DefineMethodSyn('WStrCmd',     [s:methodBy('method\.\%(insert\.\k\+\|set\)'), s:param('rtorrentStringy','rtorrentCommandArgument')])
-call s:DefineMethodSyn('W3Cmd',       [s:methodBy('if\|branch'), s:param('rtorrentCommandArgument',0), s:param('rtorrentCommandArgument','rtorrentCommandArgument')])
-call s:DefineMethodSyn('W1Cmd',       [s:methodBy('catch\|try\|print\|not', 'rtorrentCommandArgument')])
-call s:DefineMethodSyn('ViewFilter',  [s:methodBy('view\.filter'), s:param('rtorrentStringy','rtorrentCommandArgument')])
+
+function! s:DefStatement(key, pat, args) abort"{{{
+  function! s:mgroup(k, x)
+    return 'rtorrentStmt' . a:k . (a:x > 0 ? a:x : '')
+  endfunction
+  function! s:mkMatch(k, i, pat, contains, nextgroup)
+    execute 'syn match '.s:mgroup(a:k, a:i).' contained '.a:pat.' contains='.a:contains.' skipwhite nextgroup='
+          \ . (empty(a:nextgroup) ? s:mgroup(a:k, a:i + 1) : a:nextgroup) .' transparent'
+  endfunction
+  call s:mkMatch(a:key, 0, '/\%(' . a:pat . '\)\s*=/', 'rtorrentMethodName,rtorrentEq', s:mgroup(a:key, 1))
+  call s:mkMatch(a:key . 'I', 0, '/\%(' . a:pat . '\)\s*,/', 'rtorrentMethodName,rtorrentDelimiter', s:mgroup(a:key, 1))
+  let i = 1
+  for x in a:args
+    let contains = x
+    let nextgroup = (i + 1 >= len(a:args)) ? a:args[-1] : s:mgroup(a:key, i + 1)
+    execute 'syn region ' . s:mgroup(a:key, i) . ' contained start=/\S/ matchgroup=rtorrentDelimiter end=/,\s*\%(\\\n\s*\)\?/ contains='.contains.' skipwhite'
+          \ . ' nextgroup=' . nextgroup .' transparent'
+    let i = i + 1
+  endfor
+  execute 'syn cluster rtorrentMethodStatement add=' . s:mgroup(a:key, 0)
+  execute 'syn cluster rtorrentMethodCall add=' . s:mgroup(a:key . 'I', 0)
+endfunction"}}}
+
+call s:DefStatement('Schedule', 'schedule', ['rtorrentStringy', '@rtorrentRhsTop', '@rtorrentRhsTop', '@rtorrentCommandArgumentTOP'])
+call s:DefStatement('MethodInsert', 'method\.insert', ['rtorrentStringy', 'rtorrentType', '@rtorrentCommandArgumentTOP'])
+call s:DefStatement('MethodSet', 'method\.set', ['rtorrentStringy', '@rtorrentCommandArgumentTOP'])
+call s:DefStatement('MethodSetKey', 'method\.set_key', ['rtorrentStringy', 'rtorrentStringy', '@rtorrentCommandArgumentTOP'])
+call s:DefStatement('MethodInsertSimple', 'method\.insert\.\%(simple\|c_simple\|s_c_simple\)', ['rtorrentStringy','@rtorrentCommandArgumentTOP'])
+call s:DefStatement('MethodInsertValue', 'method\.insert\.value', ['rtorrentStringy','@rtorrentRhsTop'])
+call s:DefStatement('Keyword1',       'catch\|try\|print\|not', ['@rtorrentCommandArgumentTOP'])
+call s:DefStatement('Keyword2',       'if\|branch', ['@rtorrentCommandArgumentTOP', '@rtorrentCommandArgumentTOP', '@rtorrentCommandArgumentTOP'])
+call s:DefStatement('View',  'view\.\%(filter\|sort\.current\|sort\.new\)', ['rtorrentStringy', '@rtorrentCommandArgumentTOP'])
 
 " New or old style command "(( ... )) or foo=bar"
 syn region  rtorrentCommandArgument    contained start=+\_.+ end=+$+      contains=@rtorrentCommandArgumentTOP transparent
-syn cluster rtorrentCommandArgumentTOP contains=rtorrentDelimiter,rtorrentStringCommand,rtorrentPD,rtorrentP,rtorrentB
+syn cluster rtorrentCommandArgumentTOP contains=rtorrentDelimiter,@rtorrentLiteral,rtorrentIdentifier,rtorrentStringCommand,rtorrentPD,rtorrentP,rtorrentB
 
 " Commands                                                               "{{{1
 
@@ -200,6 +203,7 @@ hi def link rtorrentTypeDelim        Operator
 hi def link rtorrentEq               Operator
 hi def link rtorrentDot              Operator
 " Method names
+"hi def link rtorrentIdentifier       Identifier
 hi def link rtorrentIdentifierPrefix Type
 hi def link rtorrentMethodName       Keyword
 hi def link rtorrentMethodNameEnd    Keyword

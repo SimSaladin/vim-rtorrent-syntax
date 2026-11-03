@@ -14,10 +14,13 @@ schedule = pyro_daily_log_rotate, 01:05:00, 24:00:00, ((pyro.log_rotate))
 schedule = pyro_daily_log_rotate, 01:05:00, 24:00:00, \
   "branch = (pyro.extended), \"foobar\""
 
-schedule = prune, 01:20:00, 24:00:00, \
+schedule = prune,\
+    01:20:00, \
+  24:00:00, \
   ((execute.nothrow, sh, -c, \
     ((pmb._logfile_find_cmd, (log.gz), ((pyro.log_retention.days)), rm))))
 
+method.insert.simple = import,((if, ((os.path.readable, ((argument.0)))), ((try_import, ((argument.0))))))
 method.insert.simple = import, \
   ((if, ((os.path.readable, ((argument.0)))), ((try_import, ((argument.0))))))
 
@@ -47,3 +50,9 @@ method.set_key = ui.column.render, "135:1:✰ ",\
 
 method.insert = ui.column.render, "135:1:✰ ",\
     ((string.map, ((cat, ((d.priority)))), {0, "✖ "}, {1, "⇣ "}, {2, "  "}, {3, "⇡ "}))
+
+method.insert = foobar
+method.insert = foobar, string
+method.insert = foobar, string|simple
+method.insert = "foo,baz", string, ((if,))
+method.insert = xxx, string, "branch=(pyro.extended), ((log.messages))"
