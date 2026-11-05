@@ -60,7 +60,7 @@ syn match   rtorrentSizeLit       contained "\<\d\+[TGMK]\>" skipwhite
 " intervals "[dd:]hh:mm:ss"
 syn match   rtorrentTimeInterval  contained "\<\%(\d\d:\)\?\d\d:\d\d:\d\d" contains=rtorrentTypeDelim skipwhite
 " Numbers   "123"
-syn match   rtorrentNumber        contained "\<\d\+\>" nextgroup=rtorrentTypeDelim skipwhite
+syn match   rtorrentNumber        contained "-\?\<\d\+\>" nextgroup=rtorrentTypeDelim skipwhite
 " C-Char    "^Q"
 syn match   rtorrentCtrlChar      contained "\^[a-zA-Z0-9]\>" skipwhite
 
