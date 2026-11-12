@@ -2,9 +2,18 @@
 #
 # Testing testing TODO FIXME NOTE
 
+parens= (a, (b, (c, (d, (e, f)))))
+
+dparens= ((a, ((b, ((c, ((d, ((e, f)) )) )) )) ))
+
+bracket = {a, {b, {c, {d, e} } } }
+
+branch = "cat = \".b.\""
+
+
 dht.mode.set = disable
 network.receive_buffer.size.set = 4M
-method.insert = pyro.log_rotate, multi|rlookup|static, foo
+method.insert = pyro.log_rotate, multi|rlookup|static, "$foo="
 network.listen.port.range.set = 64333-64666
 network.listen.port.random.set = no
 pyro.bind_key = no_quit, ^q, "noq"
@@ -33,7 +42,7 @@ method.insert = bar, simple|private, \
             \" -mtime +\", (argument.1),\
             \" -exec nice \", (argument.2), \" '{}' ';'\""
 
-branch = (foobar), false=, ((view.sort_current, "active", "greater=d.up.rate="))
+branch = (foobar), false = , ((view.sort_current, "active", "greater=d.up.rate="))
 
 schedule = filt, 12, 20, ((do, \
     ((view.filter, "active", "or={d.up.rate=,d.down.rate=,not=$d.complete=}")), \
@@ -48,11 +57,16 @@ schedule = low_diskspace, 15, 60, ((close_low_diskspace.normal, (( ((1000M)) )) 
 method.set_key = ui.column.render, "135:1:✰ ",\
     ((string.map, ((cat, ((d.priority)))), {0, "✖ "}, {1, "⇣ "}, {2, "  "}, {3, "⇡ "}))
 
-method.insert = ui.column.render, "135:1:✰ ",\
-    ((string.map, ((cat, ((d.priority)))), {0, "✖ "}, {1, "⇣ "}, {2, "  "}, {3, "⇡ "}))
-
 method.insert = foobar
 method.insert = foobar, string
 method.insert = foobar, string|simple
 method.insert = "foo,baz", string, ((if,))
 method.insert = xxx, string, "branch=(pyro.extended), ((log.messages))"
+
+view.filter = indemand, ((d.is_open))
+view.filter_on = string, string
+view.filter_on = string, string, string
+view.filter_on = string, "foobar\"xyz,\"  baz", string, string, \
+    string, string
+
+execute.nothrow = sh, -c, "foobar", bazy
