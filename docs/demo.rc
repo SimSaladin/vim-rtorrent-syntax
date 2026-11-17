@@ -2,16 +2,38 @@
 #
 # Testing testing TODO FIXME NOTE
 
-parens= (a, (b, (c, (d, (e, f)))))
+# 1. Atomic Items
 
-dparens= ((a, ((b, ((c, ((d, ((e, f)) )) )) )) ))
+print = (cat, yes, no, (disable))
+
+method.insert = foo, simple|const|private|multi
+
+print = 1234M, (cat, 123, 12K, 10G)
+
+print = 1, 2, 3, 5, 420, -2, -5.5, -10.4
+
+print = ^G, ^A
+# dd:hh:mm:ss
+print = 00:00, 12:12:60, 01:15:45:50
+
+# 2. Parentheses  etc.
+
+parens  = (a, (b, (c, (d, (e, f)))))
+
+dparens = ((a, ((b, ((c, ((d, ((e, f)) )) )) )) ))
 
 bracket = {a, {b, {c, {d, e} } } }
 
+funlist = {(ouch, ok, {(yeah!)} )}
+
 branch = "cat = \".b.\""
 
+# Using the {(...)} construct:
 
-dht.mode.set = disable
+method.set_key = event.download.erased, rm_files, \
+    {(branch, ((d.custom, incomplete)), ((execute, rm, -rf, --, (d.base_path) )) )}
+
+
 network.receive_buffer.size.set = 4M
 method.insert = pyro.log_rotate, multi|rlookup|static, "$foo="
 network.listen.port.range.set = 64333-64666
@@ -20,16 +42,15 @@ pyro.bind_key = no_quit, ^q, "noq"
 
 schedule = pyro_daily_log_rotate, 01:05:00, 24:00:00, ((pyro.log_rotate))
 
-schedule = pyro_daily_log_rotate, 01:05:00, 24:00:00, \
-  "branch = (pyro.extended), \"foobar\""
-
 schedule = prune,\
     01:20:00, \
   24:00:00, \
   ((execute.nothrow, sh, -c, \
-    ((pmb._logfile_find_cmd, (log.gz), ((pyro.log_retention.days)), rm))))
+    ((pmb._logfile_find_cmd, (log.gz), ((pyro.log_retention.days)), rm))\
+    ((fobar, ((\
+    ))
 
-method.insert.simple = import,((if, ((os.path.readable, ((argument.0)))), ((try_import, ((argument.0))))))
+method.insert.simple = import, ((if, ((os.path.readable, ((argument.0)))), ((try_import, ((argument.0))))))
 method.insert.simple = import, \
   ((if, ((os.path.readable, ((argument.0)))), ((try_import, ((argument.0))))))
 
@@ -38,7 +59,7 @@ method.insert = foo, simple|private, \
 
 method.insert = bar, simple|private, \
      "cat = \"find \", (cfg.logs),\
-            \" -daystart -type f -name '*.\", (argument.0), \"'\",\
+            \" -daystart \\\"xyzbrfgc\\\"-type f -name '*.\", (argument.0), \"'\",\
             \" -mtime +\", (argument.1),\
             \" -exec nice \", (argument.2), \" '{}' ';'\""
 
@@ -70,3 +91,19 @@ view.filter_on = string, "foobar\"xyz,\"  baz", string, string, \
     string, string
 
 execute.nothrow = sh, -c, "foobar", bazy
+
+branch = (and, (system.has, "string.equals="), (system.has, "ui.column.hide=")), \
+  ((method.set_key, event.view.show, ~ratio_toggle, \
+        "branch = \"string.equals=$ui.current_view=, ratio, stopped\", \
+            ui.column.show=922, ui.column.hide=922"\
+  ))
+
+foo = asdf, ((do,\
+    "branch = \"orucoehur\", \
+    aosedu", foobar
+
+schedule = prune,\
+    01:20:00, \
+  24:00:00, \
+  ((execute.nothrow, sh, -c, \ (pmb._logfile_find_cmd, (log.gz), rm) \
+  ))

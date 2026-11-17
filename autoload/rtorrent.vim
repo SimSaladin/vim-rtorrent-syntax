@@ -1,54 +1,52 @@
 scriptencoding utf-8
 
+" [ 'rtorrentPD3', 'rtorrentPD2', 'rtorrentPD', 'rtorrentStatement']
+"
 let s:relevant =
       \[ 'rtorrentStatement'
       \, 'rtorrentStringCommand'
-      \, 'rtorrentParens1'
-      \, 'rtorrentParens2'
-      \, 'rtorrentSParens1'
-      \, 'rtorrentSParens2'
-      \, 'rtorrentBraces'
+      \, 'rtorrentP'
+      \, 'rtorrentP2'
+      \, 'rtorrentPD', 'rtorrentPD2'
+      \, 'rtorrentPD3', 'rtorrentPD4'
+      \, 'rtorrentFP', 'rtorrentFP2'
+      \, 'rtorrentB'
       \]
 
-function! s:getsyns(line, col) abort
-  let stack = map(synstack(a:line, a:col), {_, x -> synIDattr(x, 'name')})
-  return reverse(filter(stack, 'count(s:relevant, v:val) > 0'))
+function! rtorrent#get_syn_stack(line, col) abort
+  let ln = type(a:line) == 0 ? a:line : line(a:line)
+  let co = type(a:col) == 0 ? a:col : col([ln, a:col])
+  let stack = map(synstack(ln, co), {_, x -> synIDattr(x, 'name')})
+  return filter(stack, 'count(s:relevant, v:val) > 0')
 endfunction
 
+let g:myd = { }
+
 function! rtorrent#indent(line = v:lnum) abort
-  let prev_line = getline(a:line - 1)
-  if a:line > 1 && prev_line =~# '\\\s*$'
-    let i = indent(a:line - 1)
-    if i == 0
-      let i += &l:shiftwidth * 2
-    else
-      let stack = s:getsyns(a:line-1, col([a:line-1, '$'])-1)
-      let g:last_stack = stack
-      if count(stack, 'rtorrentStatement') <= 0
-        return 0
-      endif
-      for it in stack
-        if it =~# 'rtorrentS\?Parens2' && prev_line =~# '(\s\{-}(\%(.\%()\s\{-})\)\@!\)\{-}$'
-          let i += &l:shiftwidth
-          break
-        elseif it =~# 'rtorrentBraces' && prev_line =~# '{\%([^}]\)\{-}$'
-          let i += &l:shiftwidth
-          break
-        elseif it =~# 'rtorrentStringCommand'
-          let [bl, bc] = searchpos('^\s*\S\zs', 'bn', a:line-1, 0, 'line(".")>=' . a:line)
-          let bstack = s:getsyns(bl,bc)
-          if count(bstack, 'rtorrentStringCommand') < count(stack, 'rtorrentStringCommand')
-            let i += &l:shiftwidth
-            break
-          elseif bstack->len() > stack->len()
-            let i -= &l:shiftwidth
-          endif
-        endif
-      endfor
-    endif
-    return i
-  elseif count(s:getsyns(a:line-1, col([a:line-1, '$'])), 'rtorrentStatement') >= 1
+  if a:line < 1
     return 0
   endif
-
+  let prev = getline(a:line - 1)
+  if prev !~# '\\\s*$'
+    return 0 " Reset to 0 if previous line didn't end with line continuation.
+  endif
+  let ind = indent(a:line - 1)
+  let prevSynStack = rtorrent#get_syn_stack(a:line - 1, '$')
+  let g:myd['prevStack'] = prevSynStack
+  if get(prevSynStack, 0, '') !=# 'rtorrentStatement'
+    return 0 " Reset to 0 if we are not in the middle of an RC statement.
+  endif
+  if ind == 0
+    " Always increase indent of the first continued line, because the
+    " statement we are continuing began in first column.
+    return &l:shiftwidth
+  endif
+  " Otherwise... Inspect the nesting level of two previous lines.
+  let prevPrevSynStack = rtorrent#get_syn_stack(a:line - 2, '$')
+  let g:myd['prevPrevStack'] = prevPrevSynStack
+  let diff = prevSynStack->len() - prevPrevSynStack->len()
+  let g:myd['diff'] = diff
+  return max([&l:shiftwidth, ind + (&l:shiftwidth * diff)])
+  "return max([0, ind + (&l:shiftwidth * diff)])
+  return ind
 endfunction
