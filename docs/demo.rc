@@ -18,15 +18,15 @@ print = 00:00, 12:12:60, 01:15:45:50
 
 # 2. Parentheses  etc.
 
-parens  = (a, (b, (c, (d, (e, f)))))
+funlist = {(ouch, ok, {(yeah!, {( third, {( fourth, {( and fifth )} )} )} )} )}
 
-dparens = ((a, ((b, ((c, ((d, ((e, f)) )) )) )) ))
+parens  = (abc, (bcd, (ccd, (def, (efg, )))))
 
-bracket = {a, {b, {c, {d, e} } } }
+dparens = ((ab, ((EU, ((CU, ((DE, ((EU, ((EF, ((XV, ((xyz))))))))))))))))
 
-funlist = {(ouch, ok, {(yeah!)} )}
+bracket = {aaaa, {baaa, {caaaa, {daaa, e} } } }
 
-branch = "cat = \".b.\""
+branch  = "cat = \".b.eceuh \\\" third level (\\\\\\\\) \\\" ... \"  ..."
 
 # Using the {(...)} construct:
 

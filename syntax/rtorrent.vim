@@ -116,12 +116,12 @@ call s:mkNestedParens('rtorrentSB', 'rtorrentBC', 'start=+{+ skip=+{\_.\{-}}+ en
 
 " Parentheses: 2 levels
 " Cmd parens "( <cmd>[, <arg>...] )"
-call s:mkNestedParens('rtorrentP',  'rtorrentPC', 'start=+(+ skip=+(\_.\{-})+ end=+)+', '@rtorrentRhsTop,rtorrentPD', 2)
-call s:mkNestedParens('rtorrentSP', 'rtorrentPC', 'start=+(+ skip=+(\_.\{-})+ end=+)+', '@rtorrentSRhsTop,rtorrentSPD', 2)
+call s:mkNestedParens('rtorrentP',  'rtorrentPC', 'start=+(+ skip=+(\_.\{-})+ end=+)+', '@rtorrentRhsTop,rtorrentPD', 5)
+call s:mkNestedParens('rtorrentSP', 'rtorrentPC', 'start=+(+ skip=+(\_.\{-})+ end=+)+', '@rtorrentSRhsTop,rtorrentSPD', 5)
 
 " Wrapped FunctionList: multi-layered "{( ... )}"
-call s:mkNestedParens('rtorrentFP',  'rtorrentFC', 'start=+{(+  skip=+{(\_.\{-})}+ end=+)}+', '@rtorrentRhsTop', 2)
-call s:mkNestedParens('rtorrentFPS', 'rtorrentFC', 'start=+{(+  skip=+{(\_.\{-})}+ end=+)}+', '@rtorrentSRhsTop', 2)
+call s:mkNestedParens('rtorrentFP',  'rtorrentFC', 'start=+{(+  skip=+{(\_.\{-})}+ end=+)}+', '@rtorrentRhsTop', 5)
+call s:mkNestedParens('rtorrentFPS', 'rtorrentFC', 'start=+{(+  skip=+{(\_.\{-})}+ end=+)}+', '@rtorrentSRhsTop', 5)
 
 " Double Parentheses: 4 levels
 " Cmd parens 2 "(( <command>[, <args>...] ))"
@@ -150,7 +150,7 @@ syn match   rtorrentCtrlChar "\^[a-zA-Z0-9]\>" contained skipwhite
 syn match   rtorrentStringEscape2 '\\\\\\.' contained
 syn match   rtorrentStringEscape  '\\\_.' contained
 
-function! s:mkStringMatch(level, name, contains)"{{{
+function! s:mkStringMatch(level, name, contains)                         "{{{
   let escs = '"'
   let i = a:level
   while i > 0
@@ -161,7 +161,7 @@ function! s:mkStringMatch(level, name, contains)"{{{
         \ ' contains=' .. a:contains
         \ ' contained keepend excludenl'
 endfunction"}}}
-function! s:mkNestedStrings(base, level, contains)"{{{
+function! s:mkNestedStrings(base, level, contains)                       "{{{
   let l = 0
   while l <= a:level
     call s:mkStringMatch(l, a:base .. l, a:base .. (l + 1) .. ',' .. a:contains)
@@ -224,20 +224,14 @@ syn match rtorrentMethodNameEnd contained +\.\%(set_key\|set\|bind_key\)\>+ms=s+
 "syn cluster rtorrentMethodStatement add=rtorrentStmtViewFilterOn
 "syn cluster rtorrentMethodCall      add=rtorrentStmtViewFilterOnI
 
-" Misc                                                             {{{1
+" Misc                                                                    {{{1
 
 syn match   rtorrentTypeDelim    contained '[-|:]'      skipwhite skipnl
 syn match   rtorrentDelimiter    contained '[,;]\|\\\n' skipwhite skipnl
 syn match   rtorrentDot          contained '\.'
 syn match   rtorrentEq           contained '=' skipwhite skipnl nextgroup=@rtorrentSimpleLiteral
 
-" Well-known identifiers
-syn keyword rtorrentKnownCmd contained
-      \ if branch import try_import cat print do try catch not false and or
-      \ execute.nothrow execute.capture_system
-
 " Placeholders, (argument.0) etc. "\<argument\.[0-3]\>"
-syn keyword rtorrentArgArgument argument.0 argument.1 argument.2 argument.3 contained containedin=@rtorrentRhsTop
 " Command specific overrides                                             "{{{1
 
 " "schedule = <name>, <time>, <time>, <command>"
@@ -260,6 +254,22 @@ syn keyword rtorrentArgArgument argument.0 argument.1 argument.2 argument.3 cont
 "syn match   rtorrentStmtViewFilterOnI /\%(view\.\%(filter_on\)\)\s*,/  contained transparent contains=rtorrentMethodName,rtorrentDelimiter nextgroup=rtorrentStmtViewFilterOn1 skipwhite
 "syn region  rtorrentStmtViewFilterOn1 start=/\S/ matchgroup=rtorrentDelimiter end=/,\s*\%(\\\n\s*\)\?/  contained transparent contains=@rtorrentCommandArgumentStr nextgroup=rtorrentStmtViewFilterOn1 skipwhite
 
+syn match rtorrentCommandExecute /\%(\%(\_^\|(\)\s*\)\@<=\k\+\ze\s*\%(\_$\|,\|)\)/ contained
+      \ containedin=rtorrentP,rtorrentP2,rtorrentPD,rtorrentPD2,rtorrentPD3,rtorrentPD4,rtorrentPD5,rtorrentFP,rtorrentFP2,rtorrentFP3,rtorrentFP4,rtorrentFP5
+
+syn keyword rtorrentArgArgument
+      \ argument.0 argument.1 argument.2 argument.3
+      \ contained containedin=rtorrentCommandExecute
+
+" Well-known identifiers
+syn keyword rtorrentCommandBuiltin
+      \ and or if import branch try_import import.return
+      \ if branch try_import cat print do try catch not false and or
+      \ execute.nothrow execute.capture_system
+      \ execute.system execute.system.nothrow execute.system.capture execute.system.capture_nothrow
+      \ system.has log.execute system.env.default  system.env system.pid system.hostname
+      \ method.insert schedule
+      \ contained containedin=rtorrentCommandExecute
 
 " Sync:                                                                   {{{1
 
@@ -285,7 +295,7 @@ hi def link rtorrentStringy          String
 hi def link rtorrentStringEscape     SpecialChar
 hi def link rtorrentStringEscape2    SpecialChar
 
-" Inside string literals
+" Inside string literals TODO
 hi def link rtorrentString2L         Underlined
 hi def link rtorrentSStringDelim     Underlined
 
@@ -301,24 +311,35 @@ hi def link rtorrentMethodNameEnd    PreProc
 hi def link rtorrentKnownCmd         Keyword
 hi def link rtorrentArgArgument      PreProc
 hi def link rtorrentObjectMethod     Identifier
-
-"hi def link rtorrentIdentifier       Identifier
+"hi def link rtorrentCommandExecute   Identifier
+hi def link rtorrentCommandBuiltin   Keyword
 hi def link rtorrentIdentifierPrefix Type
+"hi def link rtorrentIdentifier       Identifier
+
+
+" Function List: single 5
+hi rtorrentFC1   ctermfg=5   guifg=#B87E00 gui=bold cterm=bold
+hi rtorrentFC2   ctermfg=4   guifg=#B86B00 gui=bold cterm=bold
+hi rtorrentFC3   ctermfg=6   guifg=#B85700 gui=bold cterm=bold
+hi rtorrentFC4   ctermfg=5   guifg=#B84200 gui=bold cterm=bold
+hi rtorrentFC5   ctermfg=4   guifg=#B82C00 gui=bold cterm=bold
+
+" Parentheses: custom colors for 5 levels
+hi rtorrentPC1   ctermfg=105 guifg=#0095CA gui=bold cterm=bold
+hi rtorrentPC2   ctermfg=103 guifg=#2aa198 gui=bold cterm=bold
+hi rtorrentPC3   ctermfg=167 guifg=#9600D6 gui=bold cterm=bold
+hi rtorrentPC4   ctermfg=165 guifg=#4544C9 gui=bold cterm=bold
+hi rtorrentPC5   ctermfg=165 guifg=#0800D6 gui=bold cterm=bold
+
+" Double Parentheses: custom colors, 4 levels
+hi rtorrentPDC1  ctermfg=167 guifg=#E61052
+hi rtorrentPDC2  ctermfg=165 guifg=#C82410 gui=bold cterm=bold
+hi rtorrentPDC3  ctermfg=160 guifg=#C21039
+hi rtorrentPDC4  ctermfg=162 guifg=#82357E gui=bold cterm=bold
 
 " Braces: custom  colors for 2 levels
-hi rtorrentBC1   ctermfg=135 guifg=#11AF52
-hi rtorrentBC2   ctermfg=133 guifg=#F0AE38
-" Parentheses: custom colors for 2 levels
-hi rtorrentPC1   ctermfg=105 guifg=#4544C9
-hi rtorrentPC2   ctermfg=103 guifg=#F05A38
-" Double Parentheses: custom colors, 4 levels
-hi rtorrentPDC1  ctermfg=160
-hi rtorrentPDC2  ctermfg=167
-hi rtorrentPDC3  ctermfg=165
-hi rtorrentPDC4  ctermfg=162
-" Function List: single
-hi rtorrentFC1   ctermfg=4   guifg=#2aa198 guibg=#002b36
-hi rtorrentFC2   ctermfg=5   guifg=#008b8b guibg=#073642
+hi rtorrentBC1   ctermfg=135 guifg=#71A100 gui=bold cterm=bold
+hi rtorrentBC2   ctermfg=133 guifg=#437E00 gui=bold cterm=bold
 
 " Comments etc.
 hi def link rtorrentTodo             Todo
