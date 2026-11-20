@@ -4,9 +4,14 @@
 
 # 1. Atomic Items
 
-print = (cat, yes, no, (disable))
+print = (cat, yes, no, (disable), fob)
 
-method.insert = foo, simple|const|private|multi
+method.insert = foo, \
+  simple|const|private|multi, \
+  ((foobar))
+method.insert = "foo,bar", simple|const|private|multi, ((foobar))
+
+pr = (method.insert, foo, simple|const|private|multi)
 
 print = 1234M, (cat, 123, 12K, 10G)
 
@@ -18,11 +23,11 @@ print = 00:00, 12:12:60, 01:15:45:50
 
 # 2. Parentheses  etc.
 
-funlist = {(ouch, ok, {(yeah!, {( third, {( fourth, {( and fifth )} )} )} )} )}
+funlist = {(ouch, ok, {(yeah!, {( third, {( fourth, {(and, fifth )} )} )} )} )}
 
 parens  = (abc, (bcd, (ccd, (def, (efg, )))))
 
-dparens = ((ab, ((EU, ((CU, ((DE, ((EU, ((EF, ((XV, ((xyz))))))))))))))))
+dparens = ((ab, ((EU, ((CU, ((DE, ((EU, ((EF, ((XV, ((xyz)) )) )) )) )) )) )) ))
 
 bracket = {aaaa, {baaa, {caaaa, {daaa, e} } } }
 
@@ -48,7 +53,8 @@ schedule = prune,\
   ((execute.nothrow, sh, -c, \
     ((pmb._logfile_find_cmd, (log.gz), ((pyro.log_retention.days)), rm))\
     ((fobar, ((\
-    ))
+    ))))\
+  ))
 
 method.insert.simple = import, ((if, ((os.path.readable, ((argument.0)))), ((try_import, ((argument.0))))))
 method.insert.simple = import, \
